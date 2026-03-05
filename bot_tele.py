@@ -1,5 +1,6 @@
 import os
 import telebot
+from telebot import types
 from flask import Flask, request
 
 TOKEN = "8024972363:AAEsXNGfJCvW6J5UuMp2m_7CgMuYM_XWi5s"
@@ -18,10 +19,7 @@ def home():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    json_str = request.get_data().decode("UTF-8")
-    update = telebot.types.Update.de_json(json_str)
+    json_str = request.get_data().decode("utf-8")
+    update = types.Update.de_json(json_str)
     bot.process_new_updates([update])
     return "OK", 200
-
-if __name__ == "__main__":
-    app.run()
