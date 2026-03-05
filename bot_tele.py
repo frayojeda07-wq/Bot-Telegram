@@ -64,30 +64,43 @@ async def seleccionar_producto(update: Update, context: ContextTypes.DEFAULT_TYP
     return METODO
 
 async def seleccionar_metodo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Paso 3: Pedir la Cantidad"""
+    """Paso 3: Pedir la Cantidad y guardar el ID del mensaje"""
     query = update.callback_query
     await query.answer()
     
-    # Guardamos el método de pago
     context.user_data['metodo'] = query.data
+    
+    # ¡TRUCO MAGICO! Guardamos el ID de este mensaje de menú en la memoria
+    context.user_data['mensaje_menu_id'] = query.message.message_id
     
     await query.edit_message_text(f"Método: {query.data}.\n🔢 **Escribe la cantidad** de unidades vendidas (ej. 3):", parse_mode="Markdown")
     return CANTIDAD
 
 async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Paso 4: Guardar en DB y finalizar"""
+    """Paso 4: Guardar, limpiar el chat y mostrar factura"""
+    chat_id = update.message.chat_id
+    mensaje_usuario_id = update.message.message_id
+    mensaje_menu_id = context.user_data.get('mensaje_menu_id')
+
     try:
         cantidad = int(update.message.text)
     except ValueError:
-        await update.message.reply_text("⚠️ Por favor, envíame solo un número válido. Intenta de nuevo:")
-        return CANTIDAD # Lo dejamos en el mismo estado hasta que mande un número
+        # Si escribe letras, borramos lo que escribió y le avisamos editando el menú
+        await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
+        await context.bot.edit_message_text(
+            chat_id=chat_id, 
+            message_id=mensaje_menu_id, 
+            text="⚠️ **Error:** Envíame solo un número válido.\n🔢 Escribe la cantidad de unidades:", 
+            parse_mode="Markdown"
+        )
+        return CANTIDAD
     
     producto = context.user_data['producto']
     metodo = context.user_data['metodo']
     precio = context.user_data['precio']
     total = cantidad * precio
     
-    # Guardar en SQLite
+    # --- Guardar en SQLite ---
     conn = sqlite3.connect('ventas.db')
     cursor = conn.cursor()
     cursor.execute("INSERT INTO ventas (producto, cantidad, metodo, total) VALUES (?, ?, ?, ?)", 
@@ -95,8 +108,18 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
     
-    resumen = f"✅ *¡Venta Exitosa!*\n📦 {cantidad}x {producto}\n💳 {metodo}\n💰 Total: ${total:.2f}"
-    await update.message.reply_text(resumen, parse_mode="Markdown")
+    resumen = f"✅ *¡Venta Exitosa!*\n📦 {cantidad}x {producto}\n💳 Pago: {metodo}\n💰 Total: ${total:.2f}"
+    
+    # 1. Borramos el mensaje donde tú escribiste el número (ej. el "3")
+    await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
+    
+    # 2. Editamos el menú viejo para que se convierta en la factura final
+    await context.bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=mensaje_menu_id,
+        text=resumen,
+        parse_mode="Markdown"
+    )
     
     return ConversationHandler.END
 
