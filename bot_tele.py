@@ -9,7 +9,7 @@ bot = telebot.TeleBot(TOKEN)
 
 app = Flask(__name__)
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['/start'])
 def start(message):
     bot.reply_to(message, "🤖 Bot funcionando en Render!")
 
