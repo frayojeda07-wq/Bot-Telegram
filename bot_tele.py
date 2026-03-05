@@ -23,3 +23,11 @@ def webhook():
     update = types.Update.de_json(json_str)
     bot.process_new_updates([update])
     return "OK", 200
+
+@bot.message_handler(func=lambda m: True)
+def debug(message):
+    print("Mensaje:", message.text)
+    bot.reply_to(message, "Recibí: " + message.text)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
