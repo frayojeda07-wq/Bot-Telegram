@@ -208,7 +208,8 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await application.initialize()
-    await application.start()
+    await application.start() 
+    init_db()
     yield
     await application.stop()
 
