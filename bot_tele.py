@@ -233,12 +233,12 @@ app = FastAPI(lifespan=lifespan)
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler('start', start)],
     states={
-        INDEX: [CallbackQueryHandler(menu_index), CallbackQueryHandler(start, pattern="^volver_inicio$")],
+        INDEX: [CallbackQueryHandler(menu_index), CallbackQueryHandler(start, pattern="volver_inicio$")],
         # Fíjate en el uso de 'pattern'. Es crucial para no mezclar botones.
-        PRODUCTO: [CallbackQueryHandler(seleccionar_producto, pattern="^prod_")],
-        METODO: [CallbackQueryHandler(seleccionar_metodo, pattern="^metodo_")],
-        CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_cantidad)],
-        ESPERANDO_PRECIOS: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_precios)]
+        PRODUCTO: [CallbackQueryHandler(seleccionar_producto, pattern="seleccionar_producto")],
+        METODO: [CallbackQueryHandler(seleccionar_metodo, pattern="seleccionar_metodo")],
+        CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, "guardar_cantidad")],
+        ESPERANDO_PRECIOS: [MessageHandler(filters.TEXT & ~filters.COMMAND, "guardar_precios")]
     },
     fallbacks=[CommandHandler('cancelar', cancelar)]
 )
