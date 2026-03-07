@@ -249,4 +249,4 @@ async def webhook(request: Request):
     payload = await request.json()
     update = Update.de_json(payload, application.bot)
     await application.process_update(update)
-    return {"status": "ok"}a
+    return {"status": "ok"}
