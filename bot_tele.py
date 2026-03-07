@@ -205,7 +205,6 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
     await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
     await context.bot.edit_message_text(chat_id=chat_id, message_id=mensaje_menu_id, text=resumen, parse_mode="Markdown") 
-    await update.message.reply_text("🤖 ¡Bienvenido a Mi Cajabot!\nUsa mis botones para manejar, es obvio ¿no? 🙄.", reply_markup=reply_markup)
     
     return INDEX
 
