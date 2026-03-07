@@ -35,7 +35,7 @@ def init_db():
 
 # --- 2. LÓGICA DEL BOT (Menús y Ventas) ---
 # Definimos los estados de la conversación
-PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(4)
+NEW_VENTAA, INDEX,PRODUCTO, METODO, CANTIDAD, NEW_LIST, ESPERANDO_PRECIOS = range(7)
 
 async def pedir_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Se activa con /precios y pide la lista al usuario"""
@@ -90,7 +90,27 @@ async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 ¡Bot de la Tienda de Agua activo!\nUsa el comando /vender para registrar una salida.")
+    query = update.callback_query
+    await query.answer()
+    
+    teclado = [
+        [InlineKeyboardButton("📦New venta", callback_data="new_venta")]
+        [InlineKeyboardButton("📝 Actualizar Lista", callback_data="new_list")]
+    ]
+    reply_markup = InlineKeyboardMarkup(teclado)
+    await update.message.reply_text("🤖 ¡Bienvenido a Mi Cajabot!\nUsa mis Botones para manejar\n es obvio no? 🙄.")
+    return INDEX
+    
+
+async def menu_index(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()    
+    
+    seleccion = query
+    if seleccion == "new_list":
+        return NEW_LIST
+    elif seleccion == "new_venta":
+        return NEW_VENTAA
 
 async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Paso 1: Menú de Productos Dinámico"""
@@ -114,7 +134,7 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     reply_markup = InlineKeyboardMarkup(teclado)
     await update.message.reply_text("🛒 **NUEVA VENTA**\nSelecciona el producto:", reply_markup=reply_markup, parse_mode="Markdown")
-    return PRODUCTO
+    return PRODUCT
 
 
 
@@ -219,11 +239,13 @@ application = Application.builder().token(TOKEN).build()
 
 conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler('vender', iniciar_venta),
-        CommandHandler('precios', pedir_precios) # Agregamos la entrada del nuevo comando
+        CommandHandler('start', handler.start)
     ],
     states={
         PRODUCTO: [CallbackQueryHandler(seleccionar_producto)],
+        INDEX: [CallbackQueryHandler(menu_index)],
+        NEW_VENTAA: [CallbackQueryHandler(iniciar_venta)],
+        NEW_LIST: [CallbackQueryHandler(pedir_precios)],
         METODO: [CallbackQueryHandler(seleccionar_metodo)],
         CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_cantidad)],
         ESPERANDO_PRECIOS: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_precios)] # Agregamos el estado de espera
@@ -231,7 +253,6 @@ conv_handler = ConversationHandler(
     fallbacks=[CommandHandler('cancelar', cancelar)]
 )
 
-application.add_handler(CommandHandler("start", start))
 application.add_handler(conv_handler)
 
 # --- 4. RUTAS WEB ---
