@@ -196,11 +196,18 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     
     resumen = f"✅ *¡Venta Exitosa!*\n📦 {cantidad}x {producto}\n💳 Pago: {metodo}\n💰 Total: ${total:.2f}"
+    teclado_final = [
+        [InlineKeyboardButton("🏠 Volver al Menú", callback_data="volver_inicio")]
+    ]
+    reply_markup = InlineKeyboardMarkup(teclado_final)
     
+    # Borramos el número que el usuario escribió para mantener limpio el chat
     await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
-    await context.bot.edit_message_text(chat_id=chat_id, message_id=mensaje_menu_id, text=resumen, parse_mode="Markdown")
+    await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
+    await context.bot.edit_message_text(chat_id=chat_id, message_id=mensaje_menu_id, text=resumen, parse_mode="Markdown") 
+    await update.message.reply_text("🤖 ¡Bienvenido a Mi Cajabot!\nUsa mis botones para manejar, es obvio ¿no? 🙄.", reply_markup=reply_markup)
     
-    return ConversationHandler.END
+    return INDEX
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🚫 Operación cancelada.")
@@ -227,7 +234,7 @@ app = FastAPI(lifespan=lifespan)
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler('start', start)],
     states={
-        INDEX: [CallbackQueryHandler(menu_index)],
+        INDEX: [CallbackQueryHandler(menu_index), CallbackQueryHandler(start, pattern="^volver_inicio$")],
         # Fíjate en el uso de 'pattern'. Es crucial para no mezclar botones.
         PRODUCTO: [CallbackQueryHandler(seleccionar_producto, pattern="^prod_")],
         METODO: [CallbackQueryHandler(seleccionar_metodo, pattern="^metodo_")],
