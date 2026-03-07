@@ -34,7 +34,7 @@ def init_db():
 
 # --- 2. LÓGICA DEL BOT (Estados) ---
 # Definimos los estados. ¡Asegúrate de que los nombres coincidan exactamente en todo el código!
-INDEX, NEW_VENTAA, NEW_LIST, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(7)
+INDEX, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(7)
 
 # --- PUNTO DE ENTRADA (/start) ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -196,17 +196,11 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     
     resumen = f"✅ *¡Venta Exitosa!*\n📦 {cantidad}x {producto}\n💳 Pago: {metodo}\n💰 Total: ${total:.2f}"
-    teclado_final = [
-        [InlineKeyboardButton("🏠 Volver al Menú", callback_data="volver_inicio")]
-    ]
-    reply_markup = InlineKeyboardMarkup(teclado_final)
     
-    # Borramos el número que el usuario escribió para mantener limpio el chat
     await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
-    await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
-    await context.bot.edit_message_text(chat_id=chat_id, message_id=mensaje_menu_id, text=resumen, parse_mode="Markdown") 
-    
-    return INDEX
+    await context.bot.edit_message_text(chat_id=chat_id, message_id=mensaje_menu_id, text=resumen, parse_mode="Markdown")
+    await update.message.reply_text("🤖 ¡Bienvenido a Mi Cajabot!\nUsa mis botones para manejar, es obvio ¿no? 🙄.", reply_markup=reply_markup)
+    return ConversationHandler.END
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🚫 Operación cancelada.")
@@ -233,12 +227,12 @@ app = FastAPI(lifespan=lifespan)
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler('start', start)],
     states={
-        INDEX: [CallbackQueryHandler(menu_index), CallbackQueryHandler(start, pattern="volver_inicio$")],
+        INDEX: [CallbackQueryHandler(menu_index)],
         # Fíjate en el uso de 'pattern'. Es crucial para no mezclar botones.
-        PRODUCTO: [CallbackQueryHandler(seleccionar_producto, pattern="seleccionar_producto")],
-        METODO: [CallbackQueryHandler(seleccionar_metodo, pattern="seleccionar_metodo")],
-        CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, "guardar_cantidad")],
-        ESPERANDO_PRECIOS: [MessageHandler(filters.TEXT & ~filters.COMMAND, "guardar_precios")]
+        PRODUCTO: [CallbackQueryHandler(seleccionar_producto, pattern="^prod_")],
+        METODO: [CallbackQueryHandler(seleccionar_metodo, pattern="^metodo_")],
+        CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_cantidad)],
+        ESPERANDO_PRECIOS: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_precios)]
     },
     fallbacks=[CommandHandler('cancelar', cancelar)]
 )
