@@ -239,7 +239,7 @@ application = Application.builder().token(TOKEN).build()
 
 conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler('start', handler.start)
+        CommandHandler('start', start)
     ],
     states={
         PRODUCTO: [CallbackQueryHandler(seleccionar_producto)],
