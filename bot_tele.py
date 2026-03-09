@@ -34,7 +34,7 @@ def init_db():
 
 # --- 2. LÓGICA DEL BOT (Estados) ---
 # Definimos los estados. ¡Asegúrate de que los nombres coincidan exactamente en todo el código!
-INDEX, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(7)
+INDEX, NEW_VENTAA, NEW_LIST, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(7)
 
 # --- PUNTO DE ENTRADA (/start) ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -199,7 +199,7 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await context.bot.delete_message(chat_id=chat_id, message_id=mensaje_usuario_id)
     await context.bot.edit_message_text(chat_id=chat_id, message_id=mensaje_menu_id, text=resumen, parse_mode="Markdown")
-    await update.message.reply_text("🤖 ¡Bienvenido a Mi Cajabot!\nUsa mis botones para manejar, es obvio ¿no? 🙄.", reply_markup=reply_markup)
+    
     return ConversationHandler.END
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
