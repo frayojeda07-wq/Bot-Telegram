@@ -106,9 +106,16 @@ async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
         resumen = "📊 **Precios actualizados con éxito:**\n\n" + "\n".join(actualizados)
     else:
         resumen = "⚠️ No encontré ningún precio válido. Recuerda usar el formato `Producto: Precio`"
-        
+
+    teclado_final = [
+        [InlineKeyboardButton("📦 Nueva Venta", callback_data="metodo_Efectivo")],
+        [InlineKeyboardButton("📝 Actualizar Lista", callback_data="metodo_PagoMovil")]
+    ]
+    reply_markup = InlineKeyboardMarkup(teclado_final) 
+    await update.message.reply_text("🤖 ¡che Bienvenido a Mi CajaBot \n Usa \
+                                     los bototnes para manejar el bot.", reply_markup=reply_markup, parse_mode="Markdown")
     await update.message.reply_text(resumen, parse_mode="Markdown")
-    return ConversationHandler.END
+    return INDEX
 
 # --- FLUJO DE VENTAS ---
 async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
