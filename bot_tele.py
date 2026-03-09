@@ -81,6 +81,8 @@ async def pedir_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ESPERANDO_PRECIOS # Ahora el bot espera texto libre
 
 async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
     texto = update.message.text
     lineas = texto.split('\n')
     
@@ -112,9 +114,10 @@ async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📝 Actualizar Lista", callback_data="metodo_PagoMovil")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado_final) 
+    await update.message.reply_text(resumen, parse_mode="Markdown")
     await update.message.reply_text("🤖 ¡che Bienvenido a Mi CajaBot \n Usa \
                                      los bototnes para manejar el bot.", reply_markup=reply_markup, parse_mode="Markdown")
-    await update.message.reply_text(resumen, parse_mode="Markdown")
+    
     return INDEX
 
 # --- FLUJO DE VENTAS ---
