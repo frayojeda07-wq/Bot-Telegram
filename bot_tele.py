@@ -53,13 +53,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🧮 cerrar caja", callback_data="closed")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado) 
-    await update.message.reply_text("**¡Bienvenido a Mi Cajabot!**\n\n Usa mis botones para manejar.\n \
-                                     Para que puede servir este Bot?\n Bueno es un micro gestor de tienda \n \
-                                     1) Sube tu lista de productos y precios \n \
-                                     2) Gestiona y guarda las ventas del dia.\n \
-                                     3) Administra el Stock disponible. \n \
-                                     4) Cierra caja con un cálculo perfecto y cuentas claras.", reply_markup=reply_markup)
-    
+
+    texto_bienvenida = (
+    "**¡Bienvenido a Mi Cajabot!** 🚀\n\n"
+    "Usa los botones inferiores para navegar.\n\n"
+    "**¿Para qué sirve este Bot?**\n"
+    "Es un micro-gestor diseñado para facilitar el control de tu negocio:\n\n"
+    "1️⃣ **Carga de Inventario:** Sube tu lista de productos y precios.\n"
+    "2️⃣ **Registro de Ventas:** Gestiona y guarda tus ventas diarias.\n"
+    "3️⃣ **Control de Stock:** Administra el inventario disponible en tiempo real.\n"
+    "4️⃣ **Cierre de Caja:** Cálculos precisos y cuentas claras al finalizar el día."
+    )
+
+    await update.message.reply_text(texto_bienvenida, parse_mode='Markdown', reply_markup=reply_markup)
     return INDEX 
 
 
