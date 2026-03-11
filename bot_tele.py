@@ -102,23 +102,50 @@ async def verify_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
           
 
 # -------- 8. CALCULATOR CLOSED ---------
-"""
-async def iniciar_cierre(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
     
+async def iniciar_cierre(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn = sqlite3.connect('ventas.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT total FROM ventas")
-    cierre_total = cursor.fetchall()
-    conn.close()        
+    hoy = "CURRENT_DATE"
+
+    # --- Cálculos por Método ---
+    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE metodo = 'Efectivo' AND fecha = {hoy}")
+    efectivo = cursor.fetchone()[0] or 0.0
+
+    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE metodo = 'Punto' AND fecha = {hoy}")
+    punto = cursor.fetchone()[0] or 0.0 
+
+    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE metodo = 'PagoMovil' AND fecha = {hoy}")
+    pago_movil = cursor.fetchone()[0] or 0.0
+
+    # --- Cálculos por Producto ---
+    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE producto LIKE '%Botellon%' AND fecha = {hoy}")
+    botellones = cursor.fetchone()[0] or 0.0
+
+    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE producto LIKE '%Helado%' AND fecha = {hoy}")
+    helados = cursor.fetchone()[0] or 0.0 
+
+    # --- Gran Total ---
+    total_general = efectivo + punto + pago_movil
     
-    total_venta =[]
- 
-for total_ventas in cierre_total: 
-    vetasss = total_ventas
-    total_venta.append(vetasss)"""
+    conn.close()
+
+    # --- Mensaje Final ---
+    mensaje = (
+        "📊 **CIERRE DE CAJA COMPLETO**\n\n"
+        f"💧 Total Botellones: ${botellones}\n"
+        f"🍦 Total Helados: ${helados}\n"
+        "--------------------------\n"
+        f"💵 Efectivo: ${efectivo}\n"
+        f"💳 Punto: ${punto}\n"
+        f"📱 Pago Móvil: ${pago_movil}\n\n"
+        f"💰 **TOTAL AL CIERRE: ${total_general}**"
+    )
     
-    
+    await update.message.reply_text(mensaje, parse_mode="Markdown")
+    return INDEX
+
+
 # ----------- 9. FLUJO DE PRECIOS ------------
 
 async def pedir_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
