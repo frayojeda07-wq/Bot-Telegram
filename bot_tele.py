@@ -40,7 +40,7 @@ def init_db():
 
 # ---------- 3. LÓGICA DEL BOT -----------
 
-INDEX, PASSWORD, NEW_VENTAA, NEW_LIST, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(7)
+INDEX, PASSWORD, NEW_VENTAA, NEW_LIST, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(8)
 
 
 # ---------- 4. ENTRADA (/start) -----------
