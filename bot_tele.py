@@ -48,12 +48,15 @@ INDEX, PASSWORD, NEW_VENTAA, NEW_LIST, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRE
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     teclado = [
-        [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")], # Faltaba la coma al final de esta lista
+        [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")], 
         [InlineKeyboardButton("📝 Actualizar Lista", callback_data="new_list")],
         [InlineKeyboardButton("🧮 cerrar caja", callback_data="closed")]
     ]
-    reply_markup = InlineKeyboardMarkup(teclado)
-    await update.message.reply_text("🤖 ¡Bienvenido a Mi Cajabot!\nUsa mis botones para manejar, es obvio ¿no? 🙄.", reply_markup=reply_markup)
+    reply_markup = InlineKeyboardMarkup(teclado) 
+    await update.message.reply_text("**¡Bienvenido a Mi Cajabot!** \n\n Usa mis botones para manejar.\n \
+                                     **Para que puede servir este Bot?** \n bueno es un micro gestor de tienda \n \
+                                     1) Sube tu lista de productos y precios \n 2) Gestiona y guarda las ventas del dia.\n \
+                                     3) Administra el Stock disponible. \n 4) Cierra caja con un cálculo perfecto y cuentas claras.", reply_markup=reply_markup)
     
     return INDEX 
 
