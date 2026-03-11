@@ -329,7 +329,8 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
-# Configuramos el ciclo de vida para que el bot inicie correctamente con FastAPI
+# ---------- 16. INICIO DE FastAPI ------------ 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await application.initialize()
@@ -341,35 +342,35 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 application = Application.builder().token(TOKEN).build()
 
-# Creamos el manejador de la conversación
+
+# ------------ 17. HANDLER CONVERSATION ----------
 
 conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler('start', start), # ¡El /start tiene que estar aquí adentro!
+        CommandHandler('start', start), 
         CommandHandler('vender', iniciar_venta),
         CommandHandler('precios', pedir_precios)
     ],
     states={
         INDEX: [CallbackQueryHandler(menu_index)],
-        PRODUCTO: [CallbackQueryHandler(seleccionar_producto)], # Tip: Te recomiendo volver a poner los pattern="^..." que te enseñé
+        PRODUCTO: [CallbackQueryHandler(seleccionar_producto)], 
         METODO: [CallbackQueryHandler(seleccionar_metodo)],
         CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_cantidad)],
         ESPERANDO_PRECIOS: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_precios)],
-        PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_password)] # <- AQUÍ AGREGAMOS LA ESCUCHA DE LA CONTRASEÑA
+        PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_password)] 
     },
     fallbacks=[CommandHandler('cancelar', cancelar)]
 )
 
 application.add_handler(conv_handler)
 
-# --- 4. RUTAS WEB ---
+# ------------ 18. RUTAS WEB -------------
 @app.get("/")
 async def root():
     return {"message": "Servidor activo en Render"}
 
 @app.post("/webhook")
 async def webhook(request: Request):
-    # Recibe el mensaje de Telegram y lo procesa
     payload = await request.json()
     update = Update.de_json(payload, application.bot)
     await application.process_update(update)
