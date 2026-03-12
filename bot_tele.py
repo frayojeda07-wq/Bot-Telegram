@@ -38,7 +38,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ---------- 3. LÓGICA DEL BOT -----------
+# ---------- 3. PASOS DEL BOT -----------
 
 INDEX, PASSWORD, NEW_VENTAA, NEW_LIST, PRODUCTO, METODO, CANTIDAD, ESPERANDO_PRECIOS = range(8)
 
@@ -52,20 +52,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📝 Actualizar Lista", callback_data="new_list")],
         [InlineKeyboardButton("🧮 cerrar caja", callback_data="closed")]
     ]
-    reply_markup = InlineKeyboardMarkup(teclado) 
-
+    reply_markup = InlineKeyboardMarkup(teclado)
+   
     texto_bienvenida = (
     "**¡Bienvenido a Mi Cajabot!** 🚀\n\n"
     "Usa los botones inferiores para navegar.\n\n"
     "**¿Para qué sirve este Bot?**\n"
-    "Es un micro-gestor diseñado para facilitar el control de tu negocio:\n\n"
-    "1️⃣ **Carga de Inventario:** Sube tu lista de productos y precios.\n"
-    "2️⃣ **Registro de Ventas:** Gestiona y guarda tus ventas diarias.\n"
-    "3️⃣ **Control de Stock:** Administra el inventario disponible en tiempo real.\n"
-    "4️⃣ **Cierre de Caja:** Cálculos precisos y cuentas claras al finalizar el día."
+    "Es un micro-gestor diseñado para facilitar\n el control de tu negocio:\n\n"
+    "1️⃣ **Carga de Inventario:**\nSube tu lista de productos y precios.\n"
+    "2️⃣ **Registro de Ventas:**\nGestiona y guarda tus ventas diarias.\n"
+    "3️⃣ **Control de Stock:**\nadministra el inventario disponible en tiempo real.\n"
+    "4️⃣ **Cierre de Caja:**\nCálculos precisos y cuentas claras al finalizar el día."
     )
 
-    await update.message.reply_text(texto_bienvenida, parse_mode='Markdown', reply_markup=reply_markup)
+    await update.message.reply_text(
+        texto_bienvenida, 
+        parse_mode='Markdown', 
+        reply_markup=reply_markup
+    )
+    
     return INDEX 
 
 
@@ -93,7 +98,7 @@ async def pedir_contraseña(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['mensaje_menu_id'] = query.message.message_id
     
-    await query.edit_message_text("**Escribe la contraseña para continuar:**", parse_mode="Markdown")
+    await query.edit_message_text("**Escribe la contraseña para continuar:** \n\n\n Para ir al menu principal\nEnvia /cancelar", parse_mode="Markdown")
     
     return PASSWORD
 
@@ -152,8 +157,13 @@ async def iniciar_cierre(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📱 Pago Móvil: ${pago_movil}\n\n"
         f"💰 **TOTAL AL CIERRE: ${total_general}**"
     )
-    
+    teclado = [
+        [InlineKeyboardButton("📁 Guardar db", callback_data="save_db"), InlineKeyboardButton("♻️ Reiniciar", callback_data="reset_db")],
+        [InlineKeyboardButton("🧐 Verificar Stocks", callback_data="view_stock")]
+    ]
+    reply_markup = InlineKeyboardMarkup(teclado)
     await update.message.reply_text(mensaje, parse_mode="Markdown")
+    await update.message.reply_text("Exito tu cierre a sido perfecto!📝.\n\nAhora q sigue?.", parse_mode="Markdown", reply_markup=reply_markup)
     return INDEX
 
 
@@ -169,7 +179,7 @@ async def pedir_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "*Ejemplo:*\n"
         "Botellon: 390\n"
         "Helados Tio Rico: 759\n"
-        "Botella 5L: 150"
+        "Botella 5L: 150 \n\n\n Para ir al menu principal\nEnvia /cancelar"
     )
     await query.edit_message_text(mensaje, parse_mode="Markdown")
     return ESPERANDO_PRECIOS 
@@ -212,7 +222,7 @@ async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(resumen, parse_mode="Markdown")
     await update.message.reply_text(
-        "🤖 ¡Che! Bienvenido a Mi CajaBot.\nUsa los botones para manejar el bot.", 
+        "Exito tu inventario se a guardado!📝.\n\nAhora q sigue?.", 
         reply_markup=reply_markup, 
         parse_mode="Markdown"
     )
@@ -231,7 +241,7 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     if not productos:
-        await query.edit_message_text("⚠️ Aún no has configurado los precios. Ve al menú e ingresa la lista.")
+        await query.edit_message_text("⚠️ Aún no has configurado los precios. Ve al menú e ingresa la lista. \n\n\n Para ir al menu principal\nEnvia /cancelar ")
         return ConversationHandler.END
 
     teclado = []
@@ -240,7 +250,7 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
         teclado.append([InlineKeyboardButton(f"{prod} - ${precio}", callback_data=datos_boton)])
     
     reply_markup = InlineKeyboardMarkup(teclado)
-    await query.edit_message_text("🛒 **NUEVA VENTA**\nSelecciona el producto:", reply_markup=reply_markup, parse_mode="Markdown")
+    await query.edit_message_text("🛒 **NUEVA VENTA**\nSelecciona el producto: \n\n\n Para ir al menu principal\nEnvia /cancelar ", reply_markup=reply_markup, parse_mode="Markdown")
     
     return PRODUCTO
 
@@ -260,7 +270,7 @@ async def seleccionar_producto(update: Update, context: ContextTypes.DEFAULT_TYP
         [InlineKeyboardButton("📱 Pago Móvil", callback_data="PagoMovil")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado)
-    await query.edit_message_text(f"Elegiste {context.user_data['producto']}.\n¿Cómo pagó el cliente?", reply_markup=reply_markup)
+    await query.edit_message_text(f"Elegiste {context.user_data['producto']}.\n¿Cómo pagó el cliente?\n\n\n Para ir al menu principal\nEnvia /cancelar", reply_markup=reply_markup)
     return METODO
 
 
@@ -274,7 +284,7 @@ async def seleccionar_metodo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     context.user_data['mensaje_menu_id'] = query.message.message_id
     
-    await query.edit_message_text(f"Método: {query.data}.\n🔢 **Escribe la cantidad** de unidades vendidas (ej. 3):", parse_mode="Markdown")
+    await query.edit_message_text(f"Método: {query.data}.\n🔢 **Escribe la cantidad** de unidades vendidas (ej. 3):\n\n\n Para ir al menu principal\nEnvia /cancelar", parse_mode="Markdown")
     return CANTIDAD
 
 
@@ -312,8 +322,8 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     resumen = f"✅ *¡Venta Exitosa!*\n📦 {cantidad}x {producto}\n💳 Pago: {metodo}\n💰 Total: ${total:.2f}"
     
     teclado_final = [
-        [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")],
-        [InlineKeyboardButton("📝 Actualizar Lista", callback_data="new_list")]
+        [InlineKeyboardButton("🗃️ Ver Ventas", callback_data="view_sells"), InlineKeyboardButton("🧐 Ver ultima venta", callback_data="ultimate_sell")],
+        [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado_final) 
     
@@ -325,7 +335,7 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
     await update.message.reply_text(
-        "🤖 ¡Che! Bienvenido a Mi CajaBot.\nUsa los botones para manejar el bot.", 
+        "Exito tu venta se a guardado!📝.\n\nAhora q sigue?.", 
         reply_markup=reply_markup, 
         parse_mode="Markdown"
     )
@@ -336,8 +346,15 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ----------- 15. FLUJO DE PRECIOS ------------
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🚫 Venta cancelada.")
-    return ConversationHandler.END
+    teclado = [
+        [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")], 
+        [InlineKeyboardButton("📝 Actualizar Lista", callback_data="new_list")],
+        [InlineKeyboardButton("🧮 cerrar caja", callback_data="closed")]
+    ]
+    reply_markup = InlineKeyboardMarkup(teclado)
+    await update.message.reply_text("🚫 Operacion cancelada.", reply_markup=reply_markup)
+    
+    return INDEX
 
 
 # ---------- 16. INICIO DE FastAPI ------------ 
@@ -375,7 +392,9 @@ conv_handler = ConversationHandler(
 
 application.add_handler(conv_handler)
 
+
 # ------------ 18. RUTAS WEB -------------
+
 @app.get("/")
 async def root():
     return {"message": "Servidor activo en Render"}
@@ -386,3 +405,4 @@ async def webhook(request: Request):
     update = Update.de_json(payload, application.bot)
     await application.process_update(update)
     return {"status": "ok"}
+    
