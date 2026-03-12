@@ -1,3 +1,4 @@
+
 import os
 import sqlite3
 from datetime import datetime
@@ -241,8 +242,8 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     if not productos:
-        await query.edit_message_text("⚠️ Aún no has configurado los precios. Ve al menú e ingresa la lista. \n\n\n Para ir al menu principal\nEnvia /cancelar ")
-        return ConversationHandler.END
+        await query.edit_message_text("⚠️ Aún no has configurado los precios. Ve al menú e ingresa la lista.")
+        return INDEX
 
     teclado = []
     for prod, precio in productos:
@@ -322,7 +323,9 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     resumen = f"✅ *¡Venta Exitosa!*\n📦 {cantidad}x {producto}\n💳 Pago: {metodo}\n💰 Total: ${total:.2f}"
     
     teclado_final = [
-        [InlineKeyboardButton("🗃️ Ver Ventas", callback_data="view_sells"), InlineKeyboardButton("🧐 Ver ultima venta", callback_data="ultimate_sell")],
+        
+        [InlineKeyboardButton(" Ver Stocks", callback_data="view_sells")],
+        [InlineKeyboardButton("🗃️ Ver resumem", callback_data="view_sells")],
         [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado_final) 
@@ -352,7 +355,7 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🧮 cerrar caja", callback_data="closed")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado)
-    await update.message.reply_text("🚫 Operacion cancelada.", reply_markup=reply_markup)
+    await update.message.reply_text("🚫 Operacion cancelada.\n\n A donde vamos?", reply_markup=reply_markup)
     
     return INDEX
 
