@@ -434,11 +434,7 @@ conv_handler = ConversationHandler(
         CommandHandler('precios', pedir_precios)
     ],
     states={
-        INDEX: [
-            CallbackQueryHandler(menu_index),
-            # Esta línea es la que activa a la IA cuando NO tocas botones
-            MessageHandler(filters.TEXT & ~filters.COMMAND, responder_con_ia)
-        ],
+        INDEX: [CallbackQueryHandler(menu_index)],
         PRODUCTO: [CallbackQueryHandler(seleccionar_producto)], 
         METODO: [CallbackQueryHandler(seleccionar_metodo)],
         CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_cantidad)],
@@ -451,9 +447,7 @@ conv_handler = ConversationHandler(
 # Añadimos el gran manejador a la aplicación
 application.add_handler(conv_handler)
 
-
-application.add_handler(conv_handler)
-
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder_con_ia), group=1)
 
 
 # ------------ 18. RUTAS WEB -------------
