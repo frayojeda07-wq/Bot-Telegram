@@ -380,7 +380,7 @@ async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 {"role": "system", "content": "Eres el asistente de Mi CajaBot. Sé breve y amable."},
                 {"role": "user", "content": user_text}
             ],
-            model="llama3-8b-8192",
+            model="llama-3.3-70b-versatile",
         ) 
         
         await update.message.reply_text(f"🤖 {response.choices[0].message.content}")
