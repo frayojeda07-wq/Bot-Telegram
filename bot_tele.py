@@ -367,28 +367,31 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
+    
+    # 1. Ponemos el print AQUÍ, antes de hablar con la IA
+    print(f"DEBUG: El usuario dijo: {user_text}") 
+    
     await update.message.reply_chat_action(action="typing")
 
     try:
-        # Extraemos contexto rápido de la DB
-       
-
-        # Llamada a la IA
+        # 2. Simplificamos el prompt para descartar errores de formato
         response = cliente_groq.chat.completions.create(
             messages=[
-                {"role": "system", "content": f"Eres el asistente de Mi CajaBot. Ventas de hoy: $. Sé breve."},
+                {"role": "system", "content": "Eres el asistente de Mi CajaBot. Sé breve y amable."},
                 {"role": "user", "content": user_text}
             ],
-            model="llama3-8b-8192", # O el modelo que prefieras de tu panel de Groq
+            model="llama3-8b-8192",
         ) 
         
-        print(f"DEBUG: Enviando a Groq: {user_text}") 
-        
         await update.message.reply_text(f"🤖 {response.choices[0].message.content}")
+        
     except Exception as e:
-        await update.message.reply_text("🤖 Ups, me dio un pequeño error de conexión.")
+        # 3. Imprimimos el error real en los logs de Render
+        print(f"ERROR DE GROQ: {e}") 
+        await update.message.reply_text(f"🤖 Ups, tuve un problema técnico: {str(e)[:50]}...")
     
     return INDEX
+
 
 
 
