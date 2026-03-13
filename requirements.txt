@@ -1,4 +1,6 @@
-python-telegram-bot
+GROQ 
 fastapi
 uvicorn
-pyTelegramBotAPI
+python-telegram-bot
+openai
+python-multipart
