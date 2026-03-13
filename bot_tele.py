@@ -1,6 +1,7 @@
-
 import os
 import sqlite3
+from groq import Groq
+from openai import OpenAI
 from datetime import datetime
 from fastapi import FastAPI, Request
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -9,6 +10,10 @@ from contextlib import asynccontextmanager
 
 # --------- 1. VARIABLES GLOBALES ----------
 
+cliente_groq = OpenAI(
+    api_key="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", # Usa tu llave completa
+    base_url="https://api.groq.com/openai/v1",
+)
 TOKEN = '8641191453:AAHCr4KDbBjL0Ay5OgSpx8P7QqUSL4wTZCs'
 password_admin = "132435"
 
@@ -360,19 +365,51 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return INDEX
 
 
+async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_text = update.message.text
+    await update.message.reply_chat_action(action="typing")
+
+    try:
+        # Extraemos contexto rápido de la DB
+        conn = sqlite3.connect('ventas.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT SUM(total) FROM ventas WHERE fecha = CURRENT_DATE")
+        total_hoy = cursor.fetchone()[0] or 0.0
+        conn.close()
+
+        # Llamada a la IA
+        response = cliente_groq.chat.completions.create(
+            messages=[
+                {"role": "system", "content": f"Eres el asistente de Mi CajaBot. Ventas de hoy: ${total_hoy}. Sé breve."},
+                {"role": "user", "content": user_text}
+            ],
+            model="llama3-8b-8192", # O el modelo que prefieras de tu panel de Groq
+        )
+        
+        await update.message.reply_text(f"🤖 {response.choices[0].message.content}")
+    except Exception as e:
+        await update.message.reply_text("🤖 Ups, me dio un pequeño error de conexión.")
+    
+    return INDEX
+
+
+
 # ---------- 16. INICIO DE FastAPI ------------ 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Primero inicializamos la aplicación de Telegram
     await application.initialize()
     await application.start() 
     init_db()
     yield
+    # Al cerrar, detenemos todo
     await application.stop()
+    await application.shutdown()
 
 app = FastAPI(lifespan=lifespan)
+# Definimos la aplicación globalmente para que el webhook la use
 application = Application.builder().token(TOKEN).build()
-
 
 # ------------ 17. HANDLER CONVERSATION ----------
 
@@ -383,7 +420,11 @@ conv_handler = ConversationHandler(
         CommandHandler('precios', pedir_precios)
     ],
     states={
-        INDEX: [CallbackQueryHandler(menu_index)],
+        INDEX: [
+            CallbackQueryHandler(menu_index),
+            # Esta línea es la que activa a la IA cuando NO tocas botones
+            MessageHandler(filters.TEXT & ~filters.COMMAND, responder_con_ia)
+        ],
         PRODUCTO: [CallbackQueryHandler(seleccionar_producto)], 
         METODO: [CallbackQueryHandler(seleccionar_metodo)],
         CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_cantidad)],
@@ -393,7 +434,12 @@ conv_handler = ConversationHandler(
     fallbacks=[CommandHandler('cancelar', cancelar)]
 )
 
+# Añadimos el gran manejador a la aplicación
 application.add_handler(conv_handler)
+
+
+application.add_handler(conv_handler)
+
 
 
 # ------------ 18. RUTAS WEB -------------
