@@ -365,34 +365,47 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return INDEX
 
 
+
 async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
-    
-    # 1. Ponemos el print AQUÍ, antes de hablar con la IA
-    print(f"DEBUG: El usuario dijo: {user_text}") 
-    
     await update.message.reply_chat_action(action="typing")
 
     try:
-        # 2. Simplificamos el prompt para descartar errores de formato
+        # 1. Consultamos la base de datos
+        conn = sqlite3.connect('ventas.db')
+        cursor = conn.cursor()
+        
+        # Obtenemos un resumen de hoy
+        cursor.execute("SELECT SUM(total) FROM ventas WHERE fecha = CURRENT_DATE")
+        total_hoy = cursor.fetchone()[0] or 0.0
+        
+        # Obtenemos los productos más vendidos
+        cursor.execute("SELECT producto, SUM(cantidad) as total_vendido FROM ventas GROUP BY producto ORDER BY total_vendido DESC LIMIT 3")
+        mas_vendidos = cursor.fetchall()
+        conn.close()
+
+        # 2. Preparamos el resumen para Groq (esto es lo que le da "memoria")
+        resumen_db = f"Ventas totales de hoy: ${total_hoy}. Productos top: {mas_vendidos}."
+
+        # 3. Llamada a Groq con el contexto real
         response = cliente_groq.chat.completions.create(
             messages=[
-                {"role": "system", "content": "Eres el asistente de Mi CajaBot. Sé breve y amable."},
+                {
+                    "role": "system", 
+                    "content": f"Eres el asistente financiero de Mi CajaBot. Tienes estos datos de la base de datos: {resumen_db}. Responde siempre basándote en estos números, sé amable y ayuda a tomar decisiones."
+                },
                 {"role": "user", "content": user_text}
             ],
-            model="llama-3.3-70b-versatile",
-        ) 
+            model="llama-3.1-8b-instant",
+        )
         
         await update.message.reply_text(f"🤖 {response.choices[0].message.content}")
         
     except Exception as e:
-        # 3. Imprimimos el error real en los logs de Render
-        print(f"ERROR DE GROQ: {e}") 
-        await update.message.reply_text(f"🤖 Ups, tuve un problema técnico: {str(e)[:50]}...")
-    
+        print(f"ERROR: {e}")
+        await update.message.reply_text("🤖 Ups, tuve un pequeño problema procesando tus datos.")
+
     return INDEX
-
-
 
 
 # ---------- 16. INICIO DE FastAPI ------------ 
