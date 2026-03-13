@@ -371,20 +371,18 @@ async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         # Extraemos contexto rápido de la DB
-        conn = sqlite3.connect('ventas.db')
-        cursor = conn.cursor()
-        cursor.execute("SELECT SUM(total) FROM ventas WHERE fecha = CURRENT_DATE")
-        total_hoy = cursor.fetchone()[0] or 0.0
-        conn.close()
+       
 
         # Llamada a la IA
         response = cliente_groq.chat.completions.create(
             messages=[
-                {"role": "system", "content": f"Eres el asistente de Mi CajaBot. Ventas de hoy: ${total_hoy}. Sé breve."},
+                {"role": "system", "content": f"Eres el asistente de Mi CajaBot. Ventas de hoy: $. Sé breve."},
                 {"role": "user", "content": user_text}
             ],
             model="llama3-8b-8192", # O el modelo que prefieras de tu panel de Groq
-        )
+        ) 
+        
+        print(f"DEBUG: Enviando a Groq: {user_text}") 
         
         await update.message.reply_text(f"🤖 {response.choices[0].message.content}")
     except Exception as e:
