@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 # --------- 1. VARIABLES GLOBALES ----------
 
 cliente_groq = OpenAI(
-    api_key="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", # Usa tu llave completa
+    api_key="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", 
     base_url="https://api.groq.com/openai/v1",
 )
 TOKEN = '8641191453:AAHCr4KDbBjL0Ay5OgSpx8P7QqUSL4wTZCs'
@@ -365,6 +365,7 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return INDEX
 
 
+# ----------- ∆. RESPUESTA IA  ------------
 
 async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
@@ -374,25 +375,20 @@ async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # 1. Consultamos la base de datos
         conn = sqlite3.connect('ventas.db')
         cursor = conn.cursor()
-        
-        # Obtenemos un resumen de hoy
         cursor.execute("SELECT SUM(total) FROM ventas WHERE fecha = CURRENT_DATE")
         total_hoy = cursor.fetchone()[0] or 0.0
         
-        # Obtenemos los productos más vendidos
         cursor.execute("SELECT producto, SUM(cantidad) as total_vendido FROM ventas GROUP BY producto ORDER BY total_vendido DESC LIMIT 3")
         mas_vendidos = cursor.fetchall()
         conn.close()
 
-        # 2. Preparamos el resumen para Groq (esto es lo que le da "memoria")
         resumen_db = f"Ventas totales de hoy: ${total_hoy}. Productos top: {mas_vendidos}."
 
-        # 3. Llamada a Groq con el contexto real
         response = cliente_groq.chat.completions.create(
             messages=[
                 {
                     "role": "system", 
-                    "content": f"Eres el asistente financiero de Mi CajaBot. Tienes estos datos de la base de datos: {resumen_db}. Responde siempre basándote en estos números, sé amable y ayuda a tomar decisiones."
+                    "content": f"Eres el asistente financiero de Mi CajaBot. Tienes estos datos de la base de datos: {resumen_db}. Responde siempre basándote en estos números, sé breve en tus respuestas y profecional."
                 },
                 {"role": "user", "content": user_text}
             ],
@@ -408,22 +404,21 @@ async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return INDEX
 
 
+
 # ---------- 16. INICIO DE FastAPI ------------ 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Primero inicializamos la aplicación de Telegram
     await application.initialize()
     await application.start() 
     init_db()
     yield
-    # Al cerrar, detenemos todo
     await application.stop()
     await application.shutdown()
 
 app = FastAPI(lifespan=lifespan)
-# Definimos la aplicación globalmente para que el webhook la use
 application = Application.builder().token(TOKEN).build()
+
 
 # ------------ 17. HANDLER CONVERSATION ----------
 
@@ -434,23 +429,27 @@ conv_handler = ConversationHandler(
         CommandHandler('precios', pedir_precios)
     ],
     states={
-        INDEX: [CallbackQueryHandler(menu_index)],
+        INDEX: [
+            CallbackQueryHandler(menu_index),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, responder_con_ia)
+        ],
         PRODUCTO: [CallbackQueryHandler(seleccionar_producto)], 
         METODO: [CallbackQueryHandler(seleccionar_metodo)],
         CANTIDAD: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_cantidad)],
         ESPERANDO_PRECIOS: [MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_precios)],
         PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_password)] 
     },
-    fallbacks=[CommandHandler('cancelar', cancelar)]
+    fallbacks=[
+        CommandHandler('start', start), 
+        CommandHandler('cancelar', cancelar)
+    ],
+    allow_reentry=True 
 )
 
-# Añadimos el gran manejador a la aplicación
 application.add_handler(conv_handler)
 
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder_con_ia), group=1)
 
-
-# ------------ 18. RUTAS WEB -------------
+# ----------- 18. RUTAS WEB -------------
 
 @app.get("/")
 async def root():
