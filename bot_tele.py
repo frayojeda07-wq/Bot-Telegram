@@ -9,9 +9,6 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
-# Cargar variables de entorno
-load_dotenv()
-
 # --------- 1. VARIABLES GLOBALES ----------
 
 cliente_groq = OpenAI(
@@ -19,7 +16,7 @@ cliente_groq = OpenAI(
     base_url="https://api.groq.com/openai/v1",
 )
 TOKEN = "8641191453:AAHCr4KDbBjL0Ay5OgSpx8P7QqUSL4wTZCs"
-password_admin = "132435”
+password_admin="132435”
 
 # ---------- 2. BASE DE DATOS -----------
 
