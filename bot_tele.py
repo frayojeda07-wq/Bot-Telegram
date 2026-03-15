@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from contextlib import asynccontextmanager
-from dotenv import load_dotenv
+
 
 # --------- 1. VARIABLES GLOBALES ----------
 
