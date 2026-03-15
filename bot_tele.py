@@ -72,29 +72,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
    
     texto_bienvenida = (
     "**Bienvenido a Mi CajaBot.**\n\n"
-‎
     "‎Somos un pequeño Gestor de ‎tienda\n"
     "desarrollado por AgoraSystem lider en \n"
     "sistemas de tiendas, bases de datos y\n"
     "bot de autogestión.\n\n"
-‎
     "que haces este bot en específico?:\n\n"
-‎
     "‎1. Gestiona tu inventario:\n"
 ‎    "   podés Subir, actualizar, eliminar\n"
     "   y administrar tus productos con\n"
 ‎    "   simples botones y menús sencillos.\n\n"
-‎
     "‎2. Gestiona ventas:\n"
 ‎    "   podés gestionar todas las ventas,\n"
 ‎    "   fiados, cálculos y de mas con una\n"
 ‎    "   interfaz super sencilla.\n\n"
-‎
 ‎    "3. Gestión de consumos internos:\n"
 ‎    "   podés llevar control de los gastos\n"
 ‎    "   internos, pérdidas de productos,\n"
 ‎    "   pagos y salarios.\n\n"
-‎
 ‎    "4. Inteligencia artificial:\n"
 ‎    "   Con un comando podés\n"
 ‎    "   iniciar una conversación con\n"
@@ -103,7 +97,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ‎    "   precio de un producto específico,\n"
 ‎    "   Cuanto llevas en efectivo hasta el\n"
 ‎    "   momento, registrar consumos etc.\n\n"
-‎
 ‎‎    "5. Manego de Cierre de caja:\n"
 ‎    "   al final del dia podés llevar\n"
 ‎    "   registro de lo que se hizo en el\n"
@@ -112,14 +105,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ‎    "   vendidos, subtotales y mucho mas\n"
 ‎    "   en un sólo mensaje bien\n"
 ‎    "   estructurado y fácil de entender.\n\n"
-‎
     "‎Mi Caja bot es 100% gratuito y\n"
 ‎    "‎diseñado para el pequeño\n"
     "‎‎emprendedor y llevar control de su\n"
     "‎‎negocio sin necesidad de sistemas\n"
 ‎    "‎complejos ni Computadoras.\n"
 ‎    "‎todo desde Telegram y tu movil.\n\n"
-‎
     "‎‎Recuerda si quieres un sistema mas\n"
 ‎    "‎completo, profesional y de gran magnitud\n"
     "‎de ventas podés buscar en nuestro sitio web\n"
