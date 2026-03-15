@@ -7,6 +7,10 @@ from fastapi import FastAPI, Request
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 # --------- 1. VARIABLES GLOBALES ----------
 
@@ -14,8 +18,8 @@ cliente_groq = OpenAI(
     api_key="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", 
     base_url="https://api.groq.com/openai/v1",
 )
-TOKEN = '8641191453:AAHCr4KDbBjL0Ay5OgSpx8P7QqUSL4wTZCs'
-password_admin = "132435"
+TOKEN = "8641191453:AAHCr4KDbBjL0Ay5OgSpx8P7QqUSL4wTZCs"
+password_admin = "132435”
 
 # ---------- 2. BASE DE DATOS -----------
 
@@ -47,7 +51,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS precios ( 
             producto TEXT PRIMARY KEY,
-            user_telegran_id TEXT 
+            user_telegran_id TEXT,
             precio REAL
         )
     ''')
@@ -66,55 +70,55 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     teclado = [
         [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")], 
         [InlineKeyboardButton("📝 Actualizar Lista", callback_data="new_list")],
-        [InlineKeyboardButton("🧮 cerrar caja", callback_data="closed")]
+        [InlineKeyboardButton("🧮 Cerrar caja", callback_data="closed")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado)
    
     texto_bienvenida = (
         "**Bienvenido a Mi CajaBot.**\n\n"
-        "‎Somos un pequeño Gestor de ‎tienda\n"
-        "desarrollado por AgoraSystem lider en \n"
+        "Somos un pequeño Gestor de tienda\n"
+        "desarrollado por AgoraSystem líder en \n"
         "sistemas de tiendas, bases de datos y\n"
         "bot de autogestión.\n\n"
-        "que haces este bot en específico?:\n\n"
-        "‎1. Gestiona tu inventario:\n"
-        "   podés Subir, actualizar, eliminar\n"
+        "¿Qué hace este bot en específico?:\n\n"
+        "1. Gestiona tu inventario:\n"
+        "   Podés subir, actualizar, eliminar\n"
         "   y administrar tus productos con\n"
         "   simples botones y menús sencillos.\n\n"
-        "‎2. Gestiona ventas:\n"
-        "   podés gestionar todas las ventas,\n"
-        "   fiados, cálculos y de mas con una\n"
+        "2. Gestiona ventas:\n"
+        "   Podés gestionar todas las ventas,\n"
+        "   fiados, cálculos y demás con una\n"
         "   interfaz super sencilla.\n\n"
         "3. Gestión de consumos internos:\n"
-        "   podés llevar control de los gastos\n"
+        "   Podés llevar control de los gastos\n"
         "   internos, pérdidas de productos,\n"
         "   pagos y salarios.\n\n"
         "4. Inteligencia artificial:\n"
         "   Con un comando podés\n"
         "   iniciar una conversación con\n"
         "   el modelo Llama de Meta para\n"
-        "   preguntar como van las ventas\n"
+        "   preguntar cómo van las ventas,\n"
         "   precio de un producto específico,\n"
-        "   Cuanto llevas en efectivo hasta el\n"
-        "   momento, registrar consumos etc.\n\n"
-        "5. Manego de Cierre de caja:\n"
-        "   al final del dia podés llevar\n"
+        "   cuánto llevás en efectivo hasta el\n"
+        "   momento, registrar consumos, etc.\n\n"
+        "5. Manejo de Cierre de caja:\n"
+        "   Al final del día podés llevar\n"
         "   registro de lo que se hizo en el\n"
-        "   dia, cuando se recogió en cada\n"
-        "   método de pago, productos mas\n"
-        "   vendidos, subtotales y mucho mas\n"
+        "   día, cuánto se recaudó en cada\n"
+        "   método de pago, productos más\n"
+        "   vendidos, subtotales y mucho más\n"
         "   en un sólo mensaje bien\n"
         "   estructurado y fácil de entender.\n\n"
-        "‎Mi Caja bot es 100% gratuito y\n"
-        "‎diseñado para el pequeño\n"
-        "‎‎emprendedor y llevar control de su\n"
-        "‎‎negocio sin necesidad de sistemas\n"
-        "‎complejos ni Computadoras.\n"
-        "‎todo desde Telegram y tu movil.\n"
-        "‎‎Recuerda si quieres un sistema mas\n"
-        "‎completo, profesional y de gran magnitud\n"
-        "‎de ventas podés buscar en nuestro sitio web\n"
-        "un sistema q se adapte a tu negocio.")
+        "Mi CajaBot es 100% gratuito y\n"
+        "diseñado para el pequeño\n"
+        "emprendedor y llevar control de su\n"
+        "negocio sin necesidad de sistemas\n"
+        "complejos ni computadoras.\n"
+        "Todo desde Telegram y tu móvil.\n\n"
+        "Recordá que si querés un sistema más\n"
+        "completo, profesional y de gran magnitud\n"
+        "de ventas podés buscar en nuestro sitio web\n"
+        "un sistema que se adapte a tu negocio.")
 
     await update.message.reply_text(
         texto_bienvenida, 
@@ -122,7 +126,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     
     await update.message.reply_text(
-        "**Menu principal**\nInicia una venta", 
+        "**Menú principal**\nIniciá una venta", 
         parse_mode='Markdown',
         reply_markup=reply_markup
     )
@@ -142,7 +146,10 @@ async def menu_index(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif seleccion == "new_venta":
         return await iniciar_venta(update, context)
     elif seleccion == "closed":
-        return await pedir_contraseña(update, context) 
+        return await pedir_contraseña(update, context)
+    else:
+        # Si el callback no coincide, volver a mostrar menú
+        return INDEX
 
 
 # --------- 6. SEGURIDAD DEL CIERRE ----------- 
@@ -153,7 +160,7 @@ async def pedir_contraseña(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['mensaje_menu_id'] = query.message.message_id
     
-    await query.edit_message_text("**Escribe la contraseña para continuar:** \n\n\n Para ir al menu principal\nEnvia /cancelar", parse_mode="Markdown")
+    await query.edit_message_text("**Escribí la contraseña para continuar:** \n\n\nPara ir al menú principal\nEnvía /cancelar", parse_mode="Markdown")
     
     return PASSWORD
 
@@ -167,7 +174,7 @@ async def verify_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await context.bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
    
-        await update.message.reply_text("🤖 Error de contraseña. Vuelve a escribirla:")
+        await update.message.reply_text("🤖 Error de contraseña. Volvé a escribirla:")
         
         return PASSWORD   
           
@@ -177,23 +184,22 @@ async def verify_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def iniciar_cierre(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn = sqlite3.connect('ventas.db')
     cursor = conn.cursor()
-    hoy = "CURRENT_DATE"
 
     # --- Cálculos por Método ---
-    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE metodo = 'Efectivo' AND fecha = {hoy}")
+    cursor.execute("SELECT SUM(total) FROM ventas WHERE metodo = 'Efectivo' AND fecha = CURRENT_DATE")
     efectivo = cursor.fetchone()[0] or 0.0
 
-    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE metodo = 'Punto' AND fecha = {hoy}")
+    cursor.execute("SELECT SUM(total) FROM ventas WHERE metodo = 'Punto' AND fecha = CURRENT_DATE")
     punto = cursor.fetchone()[0] or 0.0 
 
-    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE metodo = 'PagoMovil' AND fecha = {hoy}")
+    cursor.execute("SELECT SUM(total) FROM ventas WHERE metodo = 'PagoMovil' AND fecha = CURRENT_DATE")
     pago_movil = cursor.fetchone()[0] or 0.0
 
     # --- Cálculos por Producto ---
-    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE producto LIKE '%Botellon%' AND fecha = {hoy}")
+    cursor.execute("SELECT SUM(total) FROM ventas WHERE producto LIKE '%Botellon%' AND fecha = CURRENT_DATE")
     botellones = cursor.fetchone()[0] or 0.0
 
-    cursor.execute(f"SELECT SUM(total) FROM ventas WHERE producto LIKE '%Helado%' AND fecha = {hoy}")
+    cursor.execute("SELECT SUM(total) FROM ventas WHERE producto LIKE '%Helado%' AND fecha = CURRENT_DATE")
     helados = cursor.fetchone()[0] or 0.0 
 
     # --- Gran Total ---
@@ -218,7 +224,7 @@ async def iniciar_cierre(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(teclado)
     await update.message.reply_text(mensaje, parse_mode="Markdown")
-    await update.message.reply_text("Exito tu cierre a sido perfecto!📝.\n\nAhora q sigue?.", parse_mode="Markdown", reply_markup=reply_markup)
+    await update.message.reply_text("¡Éxito! Tu cierre ha sido perfecto 📝.\n\n¿Ahora qué sigue?", parse_mode="Markdown", reply_markup=reply_markup)
     return INDEX
 
 
@@ -230,11 +236,11 @@ async def pedir_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mensaje = (
         "📝 **Actualización de Precios**\n\n"
         "Envíame la lista de precios con el formato `Producto: Precio`.\n"
-        "Puedes enviar varios en un solo mensaje.\n\n"
+        "Podés enviar varios en un solo mensaje.\n\n"
         "*Ejemplo:*\n"
         "Botellon: 390\n"
         "Helados Tio Rico: 759\n"
-        "Botella 5L: 150 \n\n\n Para ir al menu principal\nEnvia /cancelar"
+        "Botella 5L: 150 \n\n\nPara ir al menú principal\nEnvía /cancelar"
     )
     await query.edit_message_text(mensaje, parse_mode="Markdown")
     return ESPERANDO_PRECIOS 
@@ -267,7 +273,7 @@ async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if actualizados:
         resumen = "📊 **Precios actualizados con éxito:**\n\n" + "\n".join(actualizados)
     else:
-        resumen = "⚠️ No encontré ningún precio válido. Recuerda usar el formato `Producto: Precio`"
+        resumen = "⚠️ No encontré ningún precio válido. Recordá usar el formato `Producto: Precio`"
 
     teclado_final = [
         [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")],
@@ -277,7 +283,7 @@ async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(resumen, parse_mode="Markdown")
     await update.message.reply_text(
-        "Exito tu inventario se a guardado!📝.\n\nAhora q sigue?.", 
+        "¡Éxito! Tu inventario se ha guardado 📝.\n\n¿Ahora qué sigue?", 
         reply_markup=reply_markup, 
         parse_mode="Markdown"
     )
@@ -297,7 +303,7 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     if not productos:
-        await query.edit_message_text("⚠️ Aún no has configurado los precios. Ve al menú e ingresa la lista.")
+        await query.edit_message_text("⚠️ Aún no has configurado los precios. Andá al menú e ingresá la lista.")
         return INDEX
 
     teclado = []
@@ -306,12 +312,12 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
         teclado.append([InlineKeyboardButton(f"{prod} - ${precio}", callback_data=datos_boton)])
     
     reply_markup = InlineKeyboardMarkup(teclado)
-    await query.edit_message_text("🛒 **NUEVA VENTA**\nSelecciona el producto: \n\n\n Para ir al menu principal\nEnvia /cancelar ", reply_markup=reply_markup, parse_mode="Markdown")
+    await query.edit_message_text("🛒 **NUEVA VENTA**\nSeleccioná el producto: \n\n\nPara ir al menú principal\nEnvía /cancelar ", reply_markup=reply_markup, parse_mode="Markdown")
     
     return PRODUCTO
 
 
-# ----------- 12. FLUJO DE PRECIOS ------------
+# ----------- 12. SELECCIONAR PRODUCTO ------------
 
 async def seleccionar_producto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -326,11 +332,11 @@ async def seleccionar_producto(update: Update, context: ContextTypes.DEFAULT_TYP
         [InlineKeyboardButton("📱 Pago Móvil", callback_data="PagoMovil")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado)
-    await query.edit_message_text(f"Elegiste {context.user_data['producto']}.\n¿Cómo pagó el cliente?\n\n\n Para ir al menu principal\nEnvia /cancelar", reply_markup=reply_markup)
+    await query.edit_message_text(f"Elegiste {context.user_data['producto']}.\n¿Cómo pagó el cliente?\n\n\nPara ir al menú principal\nEnvía /cancelar", reply_markup=reply_markup)
     return METODO
 
 
-# ----------- 13. FLUJO DE PRECIOS ------------
+# ----------- 13. SELECCIONAR MÉTODO ------------
 
 async def seleccionar_metodo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -340,11 +346,11 @@ async def seleccionar_metodo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     context.user_data['mensaje_menu_id'] = query.message.message_id
     
-    await query.edit_message_text(f"Método: {query.data}.\n🔢 **Escribe la cantidad** de unidades vendidas (ej. 3):\n\n\n Para ir al menu principal\nEnvia /cancelar", parse_mode="Markdown")
+    await query.edit_message_text(f"Método: {query.data}.\n🔢 **Escribí la cantidad** de unidades vendidas (ej. 3):\n\n\nPara ir al menú principal\nEnvía /cancelar", parse_mode="Markdown")
     return CANTIDAD
 
 
-# ----------- 14. FLUJO DE PRECIOS ------------
+# ----------- 14. GUARDAR CANTIDAD ------------
 
 async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
@@ -359,7 +365,7 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.edit_message_text(
             chat_id=chat_id, 
             message_id=mensaje_menu_id, 
-            text="⚠️ **Error:** Envíame solo un número válido.\n🔢 Escribe la cantidad de unidades:", 
+            text="⚠️ **Error:** Envíame solo un número válido.\n🔢 Escribí la cantidad de unidades:", 
             parse_mode="Markdown"
         )
         return CANTIDAD
@@ -379,9 +385,8 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     resumen = f"✅ *¡Venta Exitosa!*\n📦 {cantidad}x {producto}\n💳 Pago: {metodo}\n💰 Total: ${total:.2f}"
     
     teclado_final = [
-        
-        [InlineKeyboardButton(" Ver Stocks", callback_data="view_sells")],
-        [InlineKeyboardButton("🗃️ Ver resumem", callback_data="view_sells")],
+        [InlineKeyboardButton("📊 Ver Stocks", callback_data="view_stock")],
+        [InlineKeyboardButton("🗃️ Ver resumen", callback_data="view_sells")],
         [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado_final) 
@@ -394,7 +399,7 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
     await update.message.reply_text(
-        "Exito tu venta se a guardado!📝.\n\nAhora q sigue?.", 
+        "¡Éxito! Tu venta se ha guardado 📝.\n\n¿Ahora qué sigue?", 
         reply_markup=reply_markup, 
         parse_mode="Markdown"
     )
@@ -402,21 +407,21 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return INDEX
 
 
-# ----------- 15. FLUJO DE PRECIOS ------------
+# ----------- 15. CANCELAR ------------
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     teclado = [
         [InlineKeyboardButton("📦 Nueva Venta", callback_data="new_venta")], 
         [InlineKeyboardButton("📝 Actualizar Lista", callback_data="new_list")],
-        [InlineKeyboardButton("🧮 cerrar caja", callback_data="closed")]
+        [InlineKeyboardButton("🧮 Cerrar caja", callback_data="closed")]
     ]
     reply_markup = InlineKeyboardMarkup(teclado)
-    await update.message.reply_text("🚫 Operacion cancelada.\n\n A donde vamos?", reply_markup=reply_markup)
+    await update.message.reply_text("🚫 Operación cancelada.\n\n¿A dónde vamos?", reply_markup=reply_markup)
     
     return INDEX
 
 
-# ----------- ∆. RESPUESTA IA  ------------
+# ----------- 16. RESPUESTA IA  ------------
 
 async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
@@ -439,14 +444,14 @@ async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages=[
                 {
                     "role": "system", 
-                    "content": f"Eres el asistente financiero de Mi CajaBot. Tienes estos datos de la base de datos: {resumen_db}. Responde siempre basándote en estos números, sé amable en tus respuestas y profecional."
+                    "content": f"Eres el asistente financiero de Mi CajaBot. Tenés estos datos de la base de datos: {resumen_db}. Respondé siempre basándote en estos números, sé amable en tus respuestas y profesional."
                 },
                 {"role": "user", "content": user_text}
             ],
             model="llama-3.1-8b-instant",
         )
         
-        await update.message.reply_text(f"👤 Respuesta IA:\n\n{response.choices[0].message.content}\n\n Terminar conversacion\n /menu")
+        await update.message.reply_text(f"👤 Respuesta IA:\n\n{response.choices[0].message.content}\n\nTerminar conversación\n/menu")
         
     except Exception as e:
         print(f"ERROR: {e}")
@@ -456,13 +461,13 @@ async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-# ---------- 16. INICIO DE FastAPI ------------ 
+# ---------- 17. INICIO DE FastAPI ------------ 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_db()
     await application.initialize()
     await application.start() 
-    init_db()
     yield
     await application.stop()
     await application.shutdown()
@@ -471,7 +476,7 @@ app = FastAPI(lifespan=lifespan)
 application = Application.builder().token(TOKEN).build()
 
 
-# ------------ 17. HANDLER CONVERSATION ----------
+# ------------ 18. HANDLER CONVERSATION ----------
 
 conv_handler = ConversationHandler(
     entry_points=[
@@ -492,9 +497,8 @@ conv_handler = ConversationHandler(
     },
     fallbacks=[
         CommandHandler('start', start), 
-        CommandHandler('cancelar', cancelar)
+        CommandHandler('cancelar', cancelar),
         CommandHandler('menu', cancelar)
-        
     ],
     allow_reentry=True 
 )
@@ -502,7 +506,7 @@ conv_handler = ConversationHandler(
 application.add_handler(conv_handler)
 
 
-# ----------- 18. RUTAS WEB -------------
+# ----------- 19. RUTAS WEB -------------
 
 @app.get("/")
 async def root():
@@ -514,4 +518,3 @@ async def webhook(request: Request):
     update = Update.de_json(payload, application.bot)
     await application.process_update(update)
     return {"status": "ok"}
-    
