@@ -291,8 +291,8 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     conn = sqlite3.connect('ventas.db')
     cursor = conn.cursor()
-    user_tienda = update.effective_user.id
-    cursor.execute("SELECT producto, precio FROM precios WHERE user_telegran_id = ?", (user_tienda,))")
+    user_tienda = update.effective_user.id 
+    cursor.execute("SELECT producto, precio FROM precios WHERE user_telegran_id = ?", (user_tienda,))
     productos = cursor.fetchall()
     conn.close()
 
