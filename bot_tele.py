@@ -15,7 +15,6 @@ cliente_groq = OpenAI(
     base_url="https://api.groq.com/openai/v1",
 )
 TOKEN = '8641191453:AAHCr4KDbBjL0Ay5OgSpx8P7QqUSL4wTZCs'
-password_admin = "132435"
 
 
 # ---------- 2. BASE DE DATOS -----------
@@ -27,6 +26,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS ventas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_telegran_id TEXT,
             producto TEXT,
             cantidad INTEGER,
             metodo TEXT,
@@ -36,8 +36,18 @@ def init_db():
     ''')
 
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS precios (
+        CREATE TABLE IF NOT EXISTS tienda (
+            user_telegran_id TEXT PRIMARY KEY,
+            password_user REAL,
+            method_payments TEXT,
+            data_bcv_day REAL
+        )
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS precios ( 
             producto TEXT PRIMARY KEY,
+            user_telegran_id TEXT 
             precio REAL
         )
     ''')
@@ -61,22 +71,70 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(teclado)
    
     texto_bienvenida = (
-    "**¡Bienvenido a Mi Cajabot!** 🚀\n\n"
-    "Usa los botones inferiores para navegar.\n\n"
-    "**¿Para qué sirve este Bot?**\n"
-    "Es un micro-gestor diseñado para facilitar\n el control de tu negocio:\n\n"
-    "1️⃣ **Carga de Inventario:**\nSube tu lista de productos y precios.\n"
-    "2️⃣ **Registro de Ventas:**\nGestiona y guarda tus ventas diarias.\n"
-    "3️⃣ **Control de Stock:**\nadministra el inventario disponible en tiempo real.\n"
-    "4️⃣ **Cierre de Caja:**\nCálculos precisos y cuentas claras al finalizar el día."
-    )
+    "**Bienvenido a Mi CajaBot.**\n\n"
+‎
+    "‎Somos un pequeño Gestor de ‎tienda\n"
+    "desarrollado por AgoraSystem lider en \n"
+    "sistemas de tiendas, bases de datos y\n"
+    "bot de autogestión.\n\n"
+‎
+    "que haces este bot en específico?:\n\n"
+‎
+    "‎1. Gestiona tu inventario:\n"
+‎    "   podés Subir, actualizar, eliminar\n"
+    "   y administrar tus productos con\n"
+‎    "   simples botones y menús sencillos.\n\n"
+‎
+    "‎2. Gestiona ventas:\n"
+‎    "   podés gestionar todas las ventas,\n"
+‎    "   fiados, cálculos y de mas con una\n"
+‎    "   interfaz super sencilla.\n\n"
+‎
+‎    "3. Gestión de consumos internos:\n"
+‎    "   podés llevar control de los gastos\n"
+‎    "   internos, pérdidas de productos,\n"
+‎    "   pagos y salarios.\n\n"
+‎
+‎    "4. Inteligencia artificial:\n"
+‎    "   Con un comando podés\n"
+‎    "   iniciar una conversación con\n"
+‎    "   el modelo Llama de Meta para\n"
+‎    "   preguntar como van las ventas\n"
+‎    "   precio de un producto específico,\n"
+‎    "   Cuanto llevas en efectivo hasta el\n"
+‎    "   momento, registrar consumos etc.\n\n"
+‎
+‎‎    "5. Manego de Cierre de caja:\n"
+‎    "   al final del dia podés llevar\n"
+‎    "   registro de lo que se hizo en el\n"
+‎    "   dia, cuando se recogió en cada\n"
+‎    "   método de pago, productos mas\n"
+‎    "   vendidos, subtotales y mucho mas\n"
+‎    "   en un sólo mensaje bien\n"
+‎    "   estructurado y fácil de entender.\n\n"
+‎
+    "‎Mi Caja bot es 100% gratuito y\n"
+‎    "‎diseñado para el pequeño\n"
+    "‎‎emprendedor y llevar control de su\n"
+    "‎‎negocio sin necesidad de sistemas\n"
+‎    "‎complejos ni Computadoras.\n"
+‎    "‎todo desde Telegram y tu movil.\n\n"
+‎
+    "‎‎Recuerda si quieres un sistema mas\n"
+‎    "‎completo, profesional y de gran magnitud\n"
+    "‎de ventas podés buscar en nuestro sitio web\n"
+    "un sistema q se adapte a tu negocio.")
 
     await update.message.reply_text(
         texto_bienvenida, 
-        parse_mode='Markdown', 
-        reply_markup=reply_markup
+        parse_mode='Markdown'
     )
     
+    await update.message.reply_text(
+        "**Menu principal**\nInicia una venta", 
+        parse_mode='Markdown',
+        reply_markup=reply_markup
+    )
     return INDEX 
 
 
@@ -196,7 +254,7 @@ async def pedir_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text
     lineas = texto.split('\n')
-    
+    user_tienda = update.effective_user.id
     conn = sqlite3.connect('ventas.db')
     cursor = conn.cursor()
     actualizados = []
@@ -207,7 +265,7 @@ async def guardar_precios(update: Update, context: ContextTypes.DEFAULT_TYPE):
             nombre_producto = partes[0].strip()
             try:
                 precio = float(partes[1].strip().replace(',', '.'))
-                cursor.execute("INSERT OR REPLACE INTO precios (producto, precio) VALUES (?, ?)", (nombre_producto, precio))
+                cursor.execute("INSERT OR REPLACE INTO precios (producto, precio, user_telegran_id) VALUES (?, ?, ?)", (nombre_producto, precio, user_tienda))
                 actualizados.append(f"✅ {nombre_producto}: ${precio}")
             except ValueError:
                 pass 
@@ -242,7 +300,8 @@ async def iniciar_venta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     conn = sqlite3.connect('ventas.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT producto, precio FROM precios")
+    user_tienda = update.effective_user.id
+    cursor.execute("SELECT producto, precio FROM precios WHERE user_telegran_id  = ?", (user_tienda)")
     productos = cursor.fetchall()
     conn.close()
 
@@ -298,6 +357,7 @@ async def seleccionar_metodo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
+    user_tienda = update.effective_user.id
     mensaje_usuario_id = update.message.message_id
     mensaje_menu_id = context.user_data.get('mensaje_menu_id')
 
@@ -320,8 +380,8 @@ async def guardar_cantidad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     conn = sqlite3.connect('ventas.db')
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO ventas (producto, cantidad, metodo, total) VALUES (?, ?, ?, ?)", 
-                   (producto, cantidad, metodo, total))
+    cursor.execute("INSERT INTO ventas (producto, cantidad, user_telegran_id, metodo, total) VALUES (?, ?, ?, ?, ?)", 
+                   (producto, cantidad, user_tienda, metodo, total))
     conn.commit()
     conn.close()
     
@@ -388,14 +448,14 @@ async def responder_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages=[
                 {
                     "role": "system", 
-                    "content": f"Eres el asistente financiero de Mi CajaBot. Tienes estos datos de la base de datos: {resumen_db}. Responde siempre basándote en estos números, sé breve en tus respuestas y profecional."
+                    "content": f"Eres el asistente financiero de Mi CajaBot. Tienes estos datos de la base de datos: {resumen_db}. Responde siempre basándote en estos números, sé amable en tus respuestas y profecional."
                 },
                 {"role": "user", "content": user_text}
             ],
             model="llama-3.1-8b-instant",
         )
         
-        await update.message.reply_text(f"🤖 {response.choices[0].message.content}")
+        await update.message.reply_text(f"👤 Respuesta IA:\n\n{response.choices[0].message.content}\n\n Terminar conversacion\n /menu")
         
     except Exception as e:
         print(f"ERROR: {e}")
@@ -442,6 +502,8 @@ conv_handler = ConversationHandler(
     fallbacks=[
         CommandHandler('start', start), 
         CommandHandler('cancelar', cancelar)
+        CommandHandler('menu', cancelar)
+        
     ],
     allow_reentry=True 
 )
