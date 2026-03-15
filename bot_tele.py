@@ -16,8 +16,7 @@ cliente_groq = OpenAI(
     base_url="https://api.groq.com/openai/v1",
 )
 TOKEN = "8641191453:AAHCr4KDbBjL0Ay5OgSpx8P7QqUSL4wTZCs"
-password_admin="132435”
-
+password_admin = 12345
 # ---------- 2. BASE DE DATOS -----------
 
 def init_db():
